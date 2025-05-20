@@ -20622,6 +20622,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6066733426419388441, guid: 40215475afb234dcf80b657519a8833b, type: 3}
+      propertyPath: decalPrefab
+      value: 
+      objectReference: {fileID: 1143452692163578398, guid: b3c429301c47e40aaaa07fe1175a5eae, type: 3}
     - target: {fileID: 6203847404657958000, guid: 40215475afb234dcf80b657519a8833b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.257

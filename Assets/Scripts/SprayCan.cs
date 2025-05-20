@@ -28,11 +28,11 @@ public class SprayCan : MonoBehaviour
 
     void StartSpraying()
     {
-        sprayParticles.Play();
+        // sprayParticles.Play();
 
         if (!spraySound.isPlaying)
             spraySound.Play();
-        // TrySpawnDecal();
+        TrySpawnDecal();
         isSpraying = true;
     }
 
