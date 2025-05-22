@@ -1,26 +1,53 @@
 using UnityEngine;
+using Oculus.Interaction;
+using Meta.XR.MRUtilityKit;
+
 
 public class SprayCan : MonoBehaviour
 {
-    public ParticleSystem sprayParticles;
-    public AudioSource spraySound;
+    [SerializeField] private ParticleSystem _sprayParticles;
+    [SerializeField] private AudioSource _spraySound;
 
-    private bool isSpraying = false;
+    [SerializeField] private Grabbable _grabbable;
 
-    public GameObject decalPrefab; // Assign a prefab with a spray decal
-    public float spawnRate = 0.05f; // Seconds between decal spawns
-    private float lastSpawnTime;
+    [SerializeField] private GameObject _nuzzlePoint;
+    [SerializeField] private float _decalSize = 0.05f;
+
+    [SerializeField] MRUKAnchor.SceneLabels labelFilter;
+
+
+
+    [SerializeField] GameObject decalPrefab;
+    [SerializeField] float spawnRate = 0.01f;
+
+    [SerializeField] Color _paintColor;
+
+
+    private float _lastSpawnTime;
+    private bool _isSpraying = false;
+    Vector3 _lastSpawnPosition;
+    float minDistance = 0.005f;
 
     void Update()
     {
+        if (_grabbable.SelectingPointsCount <= 0)
+        {
+            StopSpraying();
+            return;
+        }
+
         bool triggerPressed = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) > 0.1f;
 
-        if (triggerPressed && !isSpraying)
+        if (triggerPressed)
         {
-            StartSpraying();
+            if (!_isSpraying)
+            {
+                StartSpraying();
+            }
 
+            TrySpawnPaint();
         }
-        else if (!triggerPressed && isSpraying)
+        else if (!triggerPressed && _isSpraying)
         {
             StopSpraying();
         }
@@ -28,34 +55,59 @@ public class SprayCan : MonoBehaviour
 
     void StartSpraying()
     {
-        // sprayParticles.Play();
+        if (_sprayParticles != null)
+            _sprayParticles.Play();
 
-        if (!spraySound.isPlaying)
-            spraySound.Play();
-        TrySpawnDecal();
-        isSpraying = true;
+        if (_spraySound != null && !_spraySound.isPlaying)
+            _spraySound.Play();
+
+        TrySpawnPaint();
+
+        _isSpraying = true;
     }
 
     void StopSpraying()
     {
-        sprayParticles.Stop();
-        spraySound.Stop();
-        isSpraying = false;
+        if (_sprayParticles != null)
+            _sprayParticles.Stop();
+
+        if (_spraySound != null && _spraySound.isPlaying)
+            _spraySound.Stop();
+
+        _isSpraying = false;
     }
-
-
-
-    void TrySpawnDecal()
+    void TrySpawnPaint()
     {
-        if (Time.time - lastSpawnTime < spawnRate) return;
+        if (Time.time - _lastSpawnTime < spawnRate) return;
+        Ray ray = new Ray(_nuzzlePoint.transform.position, _nuzzlePoint.transform.forward);
+        Debug.DrawRay(ray.origin, ray.direction * 5f, Color.red, 5f);
+        MRUKRoom mRUKRoom = MRUK.Instance.GetCurrentRoom();
 
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, transform.forward, out hit, 5f))
+
+        if (mRUKRoom.Raycast(ray, 2f, LabelFilter.FromEnum(labelFilter), out RaycastHit hit, out MRUKAnchor anchor))
         {
-            GameObject decal = Instantiate(decalPrefab, hit.point + hit.normal * 0.01f, Quaternion.LookRotation(hit.normal));
-            decal.transform.SetParent(hit.transform); // Attach to surface
-        }
 
-        lastSpawnTime = Time.time;
+            if (_lastSpawnPosition != Vector3.zero && Vector3.Distance(_lastSpawnPosition, hit.point) < minDistance)
+                return;
+
+            Vector3 spawnPos = hit.point + hit.normal * 0.001f;
+            Quaternion spawnRot = Quaternion.LookRotation(-hit.normal);
+
+            GameObject paint = Instantiate(decalPrefab, spawnPos, spawnRot);
+            // float randomSize = Random.Range(0.8f, 1.2f) * _decalSize;
+            paint.transform.localScale = Vector3.one * _decalSize;
+            var renderer = paint.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                Material matInstance = renderer.material;
+                matInstance.color = _paintColor;
+                renderer.material = matInstance;
+            }
+            paint.AddComponent<OVRSpatialAnchor>();
+
+
+            _lastSpawnPosition = hit.point;
+            _lastSpawnTime = Time.time;
+        }
     }
 }

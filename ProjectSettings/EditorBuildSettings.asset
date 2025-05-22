@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Samples/Meta MR Utility Kit/66.0.0/Multi Spawn/FindMultiSpawn.unity
     guid: 2c7c1aaff481cd1458b64e16d038f041
+  - enabled: 0
+    path: Assets/Scenes/TestingScene.unity
+    guid: 572cbd7c5e2554b8eb5c86be428dba99
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 5c059b61908f54072b5a758bc3a3a474, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
